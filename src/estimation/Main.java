@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
     public static void AgeEstimator(double score) {
@@ -15,9 +18,26 @@ public class Main {
         System.out.printf("This text should be understood by %d-%d year-olds.%n", score3 + 4, score3 + 5);
     }
 
+        public static int SyllableCounter(String string) {
+            int counter = 0;
+            final String regex = "[^aeiouyAEIOUY]?[aiouyAEIOUY][^aeiouyAEIOUY]|[^aeiouyAEIOUY]?[eE][^aeiouyAEIOUY .!,?]";
+
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(string);
+
+            while (matcher.find()) {
+                counter ++;
+            }
+            //System.out.println(counter);
+
+            return counter;
+        }
+
     public static void Estimator(String input) {
         double counter = 0;
         double counterC = 0;
+        double counterS = 0;
+        int counterP = 0;
         String regex = "[!.?]";
         String regexC = "[^ \\n\\t]";
         for (int i = 0; i < input.length(); i++) {
@@ -27,34 +47,34 @@ public class Main {
                 counterC++;
             }
         }
-/*        Arrays.stream(variable.split("[ ,]")) //split the sentence into words
-                .filter(s -> s.matches("[\\w-]+")) //filter only matching words
-                .count();*/
         String[] list = input.split(regex);
-
+        counterS += SyllableCounter(input);
         for (String variable : list
         ) {
             counter += Arrays.stream(variable.split(" ")) //split the sentence into words
                     .filter(s -> s.matches("[a-zA-Z0-9,()]+")) //filter only matching words
                     .count();
+            String[] listOfPoly = variable.split(" ");
+            for (String var : listOfPoly
+                 ) {
+                if (SyllableCounter(var) >= 2) {
+                    counterP ++;
+                }
+            }
+
         }
         System.out.printf("Words: %d%n", (int) counter);
         System.out.printf("Sentences: %d%n", list.length);
         System.out.printf("Characters: %d%n", (int) counterC);
+        System.out.printf("Syllables: %d%n",  counterS);
+
         double score = 4.71 * counterC / counter + 0.5 * counter / (double) list.length - 21.43;
         score = ((long) (score * 100)) / 100.0; // truncates down to 0
+        double scoreFK = 0.39 * counter / (double) list.length + 11.8 * counterS / counter - 15.59;
+        scoreFK= ((long) (scoreFK * 100)) / 100.0;
+
         System.out.printf("The score is: %.2f%n", score);
         AgeEstimator(score);
-/*        double d = (double)(counter/list.length);
-        if (d > 10) {
-            System.out.println("HARD");
-        } else {
-            System.out.println("EASY");
-        }*/
-    }
-
-    public static String readFileAsString(String fileName) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(fileName)));
     }
 
     public static void main(String[] args) throws IOException {
